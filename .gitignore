@@ -1,0 +1,5 @@
+/for_me
+.env
+/resources
+embeddings.csv
+chunks.csv

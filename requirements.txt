@@ -1,0 +1,11 @@
+fastapi
+python-dotenv 
+httpx
+fastapi[standard]
+slowapi
+google-cloud-secret-manager
+python-multipart
+aiofiles
+transformers
+bcrypt
+jwt
