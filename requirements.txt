@@ -9,3 +9,4 @@ aiofiles
 transformers
 bcrypt
 jwt
+email-validator
