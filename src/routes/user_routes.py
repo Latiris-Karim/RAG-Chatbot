@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends
 import src.db.user_db as user_db
 from src.utils.jwt_handler import get_current_user
+from src.services.email_service import verify_emailcode
 router = APIRouter(prefix="/user", tags=["user"])
 
 @router.post("/register")
-async def register(email: str, pw: str):
+async def register(email: str, pw: str):#client should cache / localstorage the email  for code verification
     result = user_db.register(email,pw)
     return result
 
@@ -16,3 +17,8 @@ async def login(email: str, pw: str):
 @router.post("/test")
 async def create_post(content: str,current_user_id: int = Depends(get_current_user)):
     return "testing protected route", current_user_id
+
+@router.post("/verify_code")
+async def code_verifier(code: str, email: str):
+    result = verify_emailcode(code, email)
+    return result

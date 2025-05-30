@@ -1,5 +1,4 @@
 from openai import OpenAI, OpenAIError
-from dotenv import load_dotenv
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from src.utils.context_retriever import get_context
@@ -9,7 +8,7 @@ from datasets import load_dataset
 
 class RAG:
     def __init__(self):
-        load_dotenv()
+        
         self.client = OpenAI(api_key=os.getenv('llm_api'), base_url="https://api.deepseek.com")
     
        
