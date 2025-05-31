@@ -35,7 +35,7 @@ def save_msg(msg, chatroom_id, u_id, role='user'):
         raise ValueError("Role must be either 'user' or 'ai'")
    
     try:
-        insert_query = '''INSERT INTO messages (msg, chatroom_id, u_id, role)
+        insert_query = '''INSERT INTO messages (msg, chat_room_id, sender_id, role)
                           VALUES (%s, %s, %s, %s)'''
         result = db.execute_query(insert_query, (msg, chatroom_id, u_id, role))
        

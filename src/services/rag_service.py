@@ -3,25 +3,24 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 from src.utils.context_retriever import get_context
 import torch
-from datasets import load_dataset
-
-
+import time
+from sentence_transformers import SentenceTransformer
+import csv
 class RAG:
     def __init__(self):
         
         self.client = OpenAI(api_key=os.getenv('llm_api'), base_url="https://api.deepseek.com")
-    
-       
-        rag_embeddings = load_dataset('fox133/testing123')
-        self.embeddings = torch.from_numpy(rag_embeddings["train"]
-                                           .to_pandas()
-                                           .to_numpy()).to(torch.float)
+        self.embeddings = torch.load('embeddings.pt', map_location='cpu', weights_only=True)
+        self.model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+        
+        with open("chunks.csv", encoding="utf-8", errors="replace") as fp:
+            reader = csv.reader(fp, delimiter=",", quotechar='"')
+            self.texts = [txtchunk for txtchunk in reader]
 
     async def get_context(self, question):
-        return get_context(question, self.embeddings)
+        return get_context(question, self.embeddings, self.model, self.texts)
     
    
-    
     async def format_query(self, question, context):
         context_str = " ".join(context)
         return f"""
@@ -53,9 +52,18 @@ class RAG:
             return f"Unexpected error: {e}"
 
     async def pipeline(self, question):
+        t0 = time.time()
         context = await self.get_context(question)
+        t1 = time.time()
         query = await self.format_query(question, context)
-        return await self.get_response(query)
+        t2 = time.time()
+        response = await self.get_response(query)
+        t3 = time.time()
+        print(f"Context time: {t1 - t0:.2f}s")
+        print(f"Formatting time: {t2 - t1:.2f}s")
+        print(f"LLM time: {t3 - t2:.2f}s")
+        return response
+        
        
 
 if __name__ == "__main__":
