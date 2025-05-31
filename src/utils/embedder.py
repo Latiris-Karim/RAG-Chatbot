@@ -1,24 +1,11 @@
-from PDF_to_chunks import get_chunks
-import requests
+from .PDF_to_chunks import get_chunks
 import pandas as pd
 import csv
-from dotenv import load_dotenv
-import os
+from sentence_transformers import SentenceTransformer
 
-#text to embedding converter
-def get_embedding(texts):#old api url
-     load_dotenv()
-     
-     hf_token = os.getenv('hf_token')
-     model_id = os.getenv('model_id')
-
-     api_url = f"https://api-inference.huggingface.co/pipeline/feature-extraction/{model_id}"
-     headers = {"Authorization": f"Bearer {hf_token}"}
-
-     response = requests.post(api_url, headers=headers, json={"inputs": texts, "options":{"wait_for_model":True}})
-
-     return response.json()
-
+def get_embedding(texts, model: SentenceTransformer):
+     embeddings = model.encode(texts)
+     return embeddings
 
 
 if __name__ == "__main__":
@@ -37,4 +24,3 @@ if __name__ == "__main__":
         write.writerow(chunks)
         
 
- 
