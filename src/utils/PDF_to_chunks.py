@@ -9,7 +9,6 @@ def split_into_sentences(text):
 def get_chunks(docs_folder, max_tokens=192, overlap_tokens=50):
     all_chunks = []
     files = [f for f in os.listdir(docs_folder) if os.path.isfile(os.path.join(docs_folder, f))]
-    # Initialize the tokenizer
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
     for file in files:

@@ -10,3 +10,9 @@ transformers
 bcrypt
 jwt
 email-validator
+hf_xet
+sentence_transformers
+tensorflow
+tf-keras
+openai
+torch

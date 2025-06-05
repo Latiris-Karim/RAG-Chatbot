@@ -6,17 +6,19 @@ from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+from src.routes.router import router
 #from src.config.secrets_manager import get_secrets
 
+load_dotenv()
 logger = logging.getLogger('uvicorn.error')
 logger.setLevel(logging.DEBUG)
 limiter = Limiter(key_func=get_remote_address, default_limits=["10/minute"])
  
-app = FastAPI()
-
 #origins = [
 #  "https://localhost:4200",
 #]
+
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,10 +31,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
 
-#get_secrets()
-load_dotenv()
-from fastapi import FastAPI
-from src.routes.router import router
 
+#get_secrets()
 
 app.include_router(router)
