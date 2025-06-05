@@ -1,4 +1,3 @@
-# RAGAPI\src\utils\convert_csv.py
 import pandas as pd
 import torch
 import os
