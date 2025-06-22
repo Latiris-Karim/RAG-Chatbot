@@ -10,7 +10,7 @@ if __name__ == "__main__":  #to test without api calls
 from src.config.database import Database
 import bcrypt
 from src.utils.jwt_handler import create_token
-from src.services.email_service import send_email
+from src.services.email_service import Emails
 
 db = Database()
 
@@ -34,7 +34,8 @@ def register(email, pw):
         code = ''.join(random.choices(string.digits, k=4))
         insert_query = """INSERT INTO users (email, password_hash, code) VALUES (%s, %s, %s) """
         db.execute_query(insert_query, (email,hashed_password_string,code))
-        send_email(email, code)
+        email = Emails()
+        email.send_verification_email(email, code)
         return {"message":"Account successfully registered"}
     else:
         return {"message":"Email is taken"}
@@ -83,5 +84,20 @@ def get_email(u_id):
     select_query = """SELECT email FROM users WHERE id = %s"""
     result = db.fetch_query(select_query, (u_id,))
     return result[0]['email']
+    
 
+def store_customer_id(u_id, customer_id):
+    update_query = '''UPDATE users SET customer_id = %s WHERE id = %s'''
+    db.execute_query(update_query, (customer_id, u_id))
+    return True
+     
 
+def get_customer_id(u_id):
+    select_query = '''SELECT customer_id FROM users WHERE id=%s'''
+    result = db.fetch_query(select_query, (u_id,))
+        
+    if result[0]['customer_id']:
+        return result[0]['customer_id'] 
+    return None
+
+   
