@@ -5,11 +5,12 @@ from src.services.email_service import Emails
 from src.db.subscription_db import cancel_stripe_subscription, get_sub_id
 import bcrypt
 import datetime
-from datetime import timedelta
+from datetime import timedelta, datetime
 import secrets
 from email_validator import validate_email, EmailNotValidError
+import os
 
-db = Database
+db = Database()
 
 def change_pw(u_id, new_password):
     if not new_password or len(new_password) == 0:
@@ -19,7 +20,7 @@ def change_pw(u_id, new_password):
        
     hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
     hashed_password_string = hashed_password.decode('utf-8')
-    update_query = '''UPDATE users SET password_hash = %s WHERE u_id = %s'''
+    update_query = '''UPDATE users SET password_hash = %s WHERE id = %s'''
 
     db.execute_query(update_query, (hashed_password_string,u_id))
     return {'message':'Password has been changed'}
@@ -34,8 +35,9 @@ def forgot_pw(email):#cant access account
     expiry = datetime.now() + timedelta(minutes=30)
     store_reset_token(email, reset_token, expiry)
 
-    reset_url = f"https://mysite.com/reset-password?token={reset_token}"
-    Emails.pw_reset_email(email, reset_url)
+    reset_url = f"https://{os.getenv('ROOT_URL')}/reset-password?token={reset_token}"
+    emails = Emails()
+    emails.pw_reset_email(email, reset_url)
     
     return {"message": "Reset email sent"}
     
@@ -72,7 +74,8 @@ def change_email_request(u_id, new_email):
    email_code = secrets.token_urlsafe(32)
    update_query = '''UPDATE users SET new_email = %s, new_email_code = %s WHERE id = %s'''
    db.execute_query(update_query, (normalized_email, email_code, u_id))
-   Emails.email_change_verification(normalized_email, email_code)
+   emails = Emails()
+   emails.email_change_verification(normalized_email, email_code)
    return {'message': 'Email change request has been submitted, check your new email'}
 
 def activate_new_email(u_id, new_email):
@@ -101,7 +104,7 @@ def change_email(u_id, userinput):
     if dbcode == userinput:
         new_email = get_new_email(u_id)
         activate_new_email(u_id, new_email)
-        return {'message':'Your email was succesfully update'}
+        return {'message':'Your email was succesfully updated'}
     
     return {'message':'Wrong code or empty code submitted'}
     
