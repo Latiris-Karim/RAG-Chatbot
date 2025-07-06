@@ -34,8 +34,8 @@ def register(email, pw):
         code = ''.join(random.choices(string.digits, k=4))
         insert_query = """INSERT INTO users (email, password_hash, code) VALUES (%s, %s, %s) """
         db.execute_query(insert_query, (email,hashed_password_string,code))
-        email = Emails()
-        email.send_verification_email(email, code)
+        emails = Emails()
+        emails.send_verification_email(email, code)
         return {"message":"Account successfully registered"}
     else:
         return {"message":"Email is taken"}
