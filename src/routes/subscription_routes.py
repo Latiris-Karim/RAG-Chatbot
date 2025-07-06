@@ -26,6 +26,22 @@ class SubscriptionRequest(BaseModel):
 class CancelSubscriptionRequest(BaseModel):
     subscriptionId: str
 
+
+@router.post('/create-customer')
+async def create_customer(customer_data: CustomerCreateRequest, u_id:int = Depends(get_current_user)):
+    try:
+        if user_db.get_customer_id(u_id):
+            return {"message":"user already has customer_id"}
+        
+        customer = stripe.Customer.create(email=customer_data.email)
+        user_db.store_customer_id(u_id, customer.id)
+        response = JSONResponse(content={"customer": customer})
+        return response
+        
+    except Exception as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    
+    
 @router.post('/create-subscription')
 async def create_subscription(subscription_data: SubscriptionRequest, u_id: int = Depends(get_current_user)):
     customer_id = user_db.get_customer_id(u_id)
@@ -58,30 +74,11 @@ async def create_subscription(subscription_data: SubscriptionRequest, u_id: int 
 async def cancel_subscription(subscription_data: CancelSubscriptionRequest, u_id: int = Depends(get_current_user)):
     try:
         # Cancel the subscription by deleting it
-        deleted_subscription = stripe.Subscription.delete(subscription_data.subscriptionId)
-        return {
-            "success": True,
-            "subscription": deleted_subscription,
-            "message": "Subscription cancelled successfully"
-        }
-    except stripe.error.StripeError as e:
-        raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
+        res = subscription_db.cancel_stripe_subscription(subscription_data.subscriptionId)
+        return res
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
     
-@router.post('/create-customer')
-async def create_customer(customer_data: CustomerCreateRequest, u_id:int = Depends(get_current_user)):
-    try:
-        if user_db.get_customer_id(u_id):
-            return {"message":"user already has customer_id"}
-        
-        customer = stripe.Customer.create(email=customer_data.email)
-        user_db.store_customer_id(u_id, customer.id)
-        response = JSONResponse(content={"customer": customer})
-        return response
-        
-    except Exception as e:
-        raise HTTPException(status_code=403, detail=str(e))
 
 @router.get('/subscriptions')#to list the user their current subscribtion and next billing
 async def list_user_subscriptions(u_id: int = Depends(get_current_user)):

@@ -218,5 +218,84 @@ class Emails:
       except Exception as e:
          print(f"Error sending failure email: {e}")
          return False
+      
+    def pw_reset_email(self, user_email, url):
+      if not user_email:
+            print("Error: Email is required")
+            return False
 
+      msg = EmailMessage()
+      msg['Subject'] = 'Password Reset Request'
+      msg['From'] = self.sender_email
+      msg['To'] = user_email
 
+      content = f"""Hello!
+
+            We received a request to reset your password for your account.
+
+            To reset your password, please click the link below:
+            {url}
+
+            This link will expire in 30 minutes for security reasons.
+
+            If you did not request a password reset, please ignore this email. Your password will remain unchanged.
+
+            For security reasons, please do not share this link with anyone.
+
+            If you have any questions or need assistance, please don't hesitate to reach out to us.
+
+            Best regards,
+            Your Team"""
+      
+      msg.set_content(content)
+      
+      try:
+         with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port) as smtp:
+               smtp.login(self.sender_email, self.sender_password)
+               smtp.send_message(msg)
+         print(f"Password reset email sent successfully to {user_email}")
+         return True
+      except Exception as e:
+         print(f"Error sending password reset email: {e}")
+         return False
+
+    def email_change_verification(self, user_email, verification_code):
+            if not user_email:
+               print("Error: Email is required")
+               return False
+
+            msg = EmailMessage()
+            msg['Subject'] = 'Email Change Verification'
+            msg['From'] = self.sender_email
+            msg['To'] = user_email
+
+            content = f"""Hello!
+
+         We received a request to change your email address for your account.
+
+         To complete the email change, please enter the verification code below:
+
+         {verification_code}
+
+         This code will expire in 15 minutes for security reasons.
+
+         If you did not request an email change, please ignore this email and contact us immediately as someone may be trying to access your account.
+
+         For security reasons, please do not share this code with anyone.
+
+         If you have any questions or need assistance, please don't hesitate to reach out to us.
+
+         Best regards,
+         Your Team"""
+            
+            msg.set_content(content)
+            
+            try:
+               with smtplib.SMTP_SSL(self.smtp_server, self.smtp_port) as smtp:
+                  smtp.login(self.sender_email, self.sender_password)
+                  smtp.send_message(msg)
+               print(f"Email change verification code sent successfully to {user_email}")
+               return True
+            except Exception as e:
+               print(f"Error sending email change verification: {e}")
+               return False
