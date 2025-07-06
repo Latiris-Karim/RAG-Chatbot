@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Request
 import src.db.user_db as user_db
-from src.db.user_db import get_userid
 from src.utils.jwt_handler import invalidate_token
 from src.services.email_service import verify_emailcode
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -13,6 +12,9 @@ class UserLogin(BaseModel):
     email: str
     pw: str
 
+class VerifyEmail(BaseModel):
+    code: str
+    email: str
 
 @router.post("/register")
 async def register(req: UserLogin):#localstorage the email  for code verification
@@ -29,7 +31,9 @@ async def login(req: UserLogin):
     return result
 
 @router.post("/verify_code")
-async def code_verifier(code: str, email: str):
+async def code_verifier(req:VerifyEmail):
+    code = req.code
+    email = req.email
     result = verify_emailcode(code, email)
     return result
  
