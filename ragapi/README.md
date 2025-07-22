@@ -109,9 +109,3 @@ From day one, you have everything needed to monetize your application. Stripe in
 While flexible enough for any chat application, the schema and endpoints are specifically designed to support Retrieval Augmented Generation workflows with document context and conversation history.
 
 
-**Ready to build something amazing?** 
-
-👉 **[Explore the API Endpoints →](./api-docs.md)**  
-👉 **[Dive into the Database Schema →](./schema.sql)**  
-
-
