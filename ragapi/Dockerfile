@@ -1,11 +1,11 @@
 FROM python:3.9
 
-WORKDIR /RAGAPI
+WORKDIR /ragapi
 
-COPY ./requirements.txt /RAGAPI/requirements.txt
+COPY ./requirements.txt /ragapi/requirements.txt
 
-RUN pip install --no-cache-dir --upgrade -r /RAGAPI/requirements.txt
+RUN pip install --no-cache-dir --upgrade -r /ragapi/requirements.txt
 
-COPY . /RAGAPI/
+COPY . /ragapi/
 
 CMD ["fastapi", "run", "main.py", "--port", "8080"]
