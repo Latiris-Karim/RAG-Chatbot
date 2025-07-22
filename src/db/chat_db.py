@@ -11,29 +11,22 @@ from src.utils.constants import LOL_Room_Names
 db = Database()
 
 
-def create_chatroom(u_id, max_retries=3): 
-     for attempt in range(max_retries):
-        try:
-            chatroom_id = random.randint(1, 10000)
-            room = random.choice(LOL_Room_Names)
-            
-            
-            insert_query = """INSERT INTO chat_rooms (chatroom_id, user_id, title) VALUES (%s, %s, %s)"""
-            db.execute_query(insert_query, (chatroom_id, u_id, room))
-            
-            return {
-                "message": "Chatroom created",
-                "chatroom_id": chatroom_id,
-                "title": room
-            }
-            
-        except Exception as e:
-            error_msg = str(e).lower()
-            if ("duplicate" in error_msg or "unique" in error_msg) and attempt < max_retries - 1:
-                continue  
-            else:
-                print(f"Error creating chatroom: {str(e)}")
-                return {"status": "error", "message": "Failed to create chatroom"}
+def create_chatroom(u_id): 
+    room = random.choice(LOL_Room_Names)
+
+
+    insert_query = """INSERT INTO chat_rooms (user_id, title) VALUES (%s, %s)"""
+    db.execute_query(insert_query, (u_id, room))
+    
+    select_query = """SELECT id FROM chat_rooms WHERE user_id = %s ORDER BY created_at DESC LIMIT 1"""
+    res = db.fetch_query(select_query, (u_id,))
+    chatroom_id = res[0]['id']
+    
+    return {
+        "message": "Chatroom created",
+        "chatroom_id": chatroom_id,
+        "title": room
+    }  
     
     
 def save_msg(msg, chatroom_id, u_id, role='user'):
@@ -70,5 +63,22 @@ def access_to_chatroom(chatroom_id, u_id):
     select_query = '''SELECT COUNT(*) FROM chat_rooms WHERE id = %s and user_id = %s'''
     result = db.fetch_query(select_query,(chatroom_id, u_id))
     return result[0]['count'] > 0
-    
-   
+
+def clean_text(text):
+    unwanted_patterns = ["\n\n2.", "\n—", "\n2."]
+    for pattern in unwanted_patterns:
+        text = text.replace(pattern, "")
+    return text.strip()
+
+def recent_chathistory(chatroom_id):
+    select_query = '''SELECT role, msg FROM messages WHERE chat_room_id = %s ORDER BY created_at DESC LIMIT 10'''
+    results = db.fetch_query(select_query, (chatroom_id,))
+
+    formatted_messages = []
+    for row in results:
+        role = clean_text(row['role']).capitalize()
+        message = clean_text(row['msg'])
+        formatted_messages.append(f"{role}: {message}")
+
+    chathistory = "\n".join(reversed(formatted_messages))
+    return chathistory

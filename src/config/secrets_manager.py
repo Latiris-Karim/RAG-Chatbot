@@ -1,7 +1,7 @@
 import os
 from google.cloud import secretmanager
 
-
+#TODO probably will use AWS for deployment instead
 def get_secrets():
     
     project_id = os.getenv('GOOGLE_CLOUD_PROJECT')
