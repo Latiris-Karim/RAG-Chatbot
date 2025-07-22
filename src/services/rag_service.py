@@ -6,21 +6,23 @@ from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import semantic_search
 from dotenv import load_dotenv
 import asyncio
-import csv
 from src.utils.PDF_to_chunks import get_chunks
-import pandas as pd
-
+import pickle
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 load_dotenv()
 
-#imports these reuseable variables just once on module import, instead of on every rag object creation, saves roughly 2 seconds respone time and that on a small dataset
-embeddings = torch.load('embeddings.pt', map_location='cpu', weights_only=True)
+
 sentence_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 openai_client = AsyncOpenAI(api_key=os.getenv('llm_api'), base_url="https://api.deepseek.com")
 
-with open("chunks.csv", encoding="utf-8", errors="replace") as fp:
-            reader = csv.reader(fp, delimiter=",", quotechar='"')
-            texts = [txtchunk for txtchunk in reader]
+if os.path.exists('embeddings.pt') and os.path.exists('chunks.pkl'):
+    embeddings = torch.load('embeddings.pt', map_location='cpu', weights_only=True)
+
+    with open('chunks.pkl', 'rb') as f:
+        texts = pickle.load(f)
+else:
+    embeddings = None
+    texts = None
 class RAG:
     def __init__(self):
         
@@ -46,23 +48,27 @@ class RAG:
         )
         
         # Retrieve and return the matching context chunks
-        context = [self.texts[0][hits[0][i]['corpus_id']] for i in range(len(hits[0]))]
+        context = [self.texts[hits[0][i]['corpus_id']] for i in range(len(hits[0]))]
         return context
    
 
-    def format_query(self, question, context):
+    def format_query(self, chathistory, question, context):
+
         context_str = " ".join(context)
-        return f"""
-        The following is relevant context extracted from a document:
+        chat_section = f"\nChat history:\n{chathistory}" if chathistory else ""
+
+        return f"""You are an expert assistant. Use the following context and chat history to answer the user's latest question.
+
+        Context from documents:
         {context_str}
 
-        Question: {question}
+        {chat_section}
 
-        Respond in exactly two parts:
-        1. Your answer to the question based on the context.
-        2. On a new line, only the filename of the most relevant PDF, without any labels or additional text.
+        User's latest question:
+        {question}
 
-        Do not include any labels like "Answer:" or "Filename:". Just provide the two parts as described above.
+        Answer the question based strictly on the context above.
+        Do not include labels like "Answer:" or filenames. Respond with only the answer content.
         """
 
 
@@ -83,11 +89,11 @@ class RAG:
             return f"Unexpected error: {e}"
     
 
-    async def pipeline(self, question):
+    async def pipeline(self, chathistory, question):
         t0 = time.time()
         context = await self.get_context(question)
         t1 = time.time()
-        query = self.format_query(question, context)
+        query = self.format_query(chathistory,question, context)
         t2 = time.time()
         response = await self.get_response(query)
         t3 = time.time()
@@ -98,13 +104,17 @@ class RAG:
         
        
 
-if __name__ == "__main__":
+async def main():
     rag = RAG()
-    path = "..."
+    path = r""
     chunks = get_chunks(path)
-    embeddings = rag.get_embedding(chunks)
+    embeddings = await rag.get_embedding(chunks) 
     
-    # export embeddings to CSV
-    embedding = pd.DataFrame(embeddings)
-    embedding.to_csv("embeddings.csv", index=False)
-    
+    embeddings_tensor = torch.from_numpy(embeddings).to(torch.float)
+    torch.save(embeddings_tensor, 'embeddings.pt')
+
+    with open('chunks.pkl', 'wb') as f:
+        pickle.dump(chunks, f)
+
+if __name__ == "__main__":
+    asyncio.run(main())
