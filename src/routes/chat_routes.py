@@ -13,12 +13,18 @@ class message(BaseModel):
    txt: str 
    chatroom_id: int
 
-@router.post("/create/chatroom")
+@router.post("/create")
 async def create_chatroom(u_id: int = Depends(get_current_user)):
     return chat_db.create_chatroom(u_id)
 
 @router.post("/send")
 async def send_message(req: message, u_id: int = Depends(get_current_user)):
+
+   chatroom_id = req.chatroom_id
+
+   if not chat_db.access_to_chatroom(chatroom_id, u_id):
+    return {'message': 'Chatroom not found or access denied'}
+   
    if not subscription_db.has_active_subscription(u_id) and free_pro_db.is_user_at_limit(u_id):
       timeleft = free_pro_db.get_time_until_reset()
       return {'message': f'You can use the chat in {timeleft:.1f} hours again!'}
@@ -26,11 +32,13 @@ async def send_message(req: message, u_id: int = Depends(get_current_user)):
    if not subscription_db.has_active_subscription(u_id):
         free_pro_db.increase_query_counter(u_id)
 
+   chathistory = chat_db.recent_chathistory(chatroom_id)
+
    t1= time.time()
    rag = RAG()
-   chat_db.save_msg(req.txt, req.chatroom_id, u_id, role='user')
-   res = await rag.pipeline(req.txt)
-   chat_db.save_msg(res, req.chatroom_id, u_id, role='ai')
+   chat_db.save_msg(req.txt, chatroom_id, u_id, role='user')
+   res = await rag.pipeline(chathistory, req.txt)
+   chat_db.save_msg(res, chatroom_id, u_id, role='ai')
    t2 = time.time()
    print(f"respone time:{t2-t1:.2f}s")
    return res
