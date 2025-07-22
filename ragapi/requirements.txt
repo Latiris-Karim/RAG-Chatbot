@@ -18,3 +18,5 @@ openai
 torch
 pydantic
 stripe
+httpx
+pytest
