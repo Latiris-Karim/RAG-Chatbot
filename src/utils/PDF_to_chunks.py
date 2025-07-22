@@ -50,7 +50,7 @@ def get_chunks(docs_folder, max_tokens=192, overlap_tokens=50):
             file_chunks.append(chunk_text)
 
         # Add all chunks from this file to the main list, including the filename at the end
-        all_chunks.extend([f"{chunk}' '{file}" for chunk in file_chunks])
+        all_chunks.extend([f"{chunk}'" for chunk in file_chunks])
 
     return all_chunks
 
