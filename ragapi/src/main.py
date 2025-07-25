@@ -33,5 +33,5 @@ app.add_middleware(SlowAPIMiddleware)
 
 
 #get_secrets()
-
 app.include_router(router)
+
