@@ -63,6 +63,10 @@ A production-ready RESTful API that combines **Retrieval Augmented Generation (R
 - **Password reset** with time-limited tokens
 - **Multi-provider authentication** support
 
+### Testing
+- Test Coverage Areas:
+- Every endpoint properly rejects unauthorized requests
+
 ### Chat Management
 - **Create unlimited chat rooms** per user
 - **Persistent message history** with sender tracking
