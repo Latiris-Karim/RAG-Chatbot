@@ -77,7 +77,7 @@ class RAG:
             response = await self.client.chat.completions.create(
                 model="deepseek-chat",
                 messages=[{"role": "user", "content": query}],
-                temperature=0.0
+                temperature=1.3
             )
             if response.choices and len(response.choices) > 0:
                 return response.choices[0].message.content
