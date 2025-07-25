@@ -1,4 +1,4 @@
-from src.main import app
+from ragapi.main import app
 from fastapi.testclient import TestClient
 from src.utils.jwt_handler import create_token_pair
 
