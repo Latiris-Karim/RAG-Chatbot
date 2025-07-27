@@ -1,4 +1,4 @@
-../for_me/
+/for_me/
 .env
 /resources
 embeddings.csv
