@@ -6,12 +6,13 @@ import re
 def split_into_sentences(text):
     return re.findall(r'[^.!?\n]+[.!?\n]', text)
 
-def get_chunks(docs_folder, max_tokens=192, overlap_tokens=50):
+def get_chunks(docs_folder, max_tokens=192, overlap_tokens=50) -> list[tuple[str, str]]:
     all_chunks = []
     files = [f for f in os.listdir(docs_folder) if os.path.isfile(os.path.join(docs_folder, f))]
     tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
     for file in files:
+        filename = os.path.splitext(file)[0]
         pdf_path = os.path.join(docs_folder, file)
         reader = PdfReader(pdf_path)
         text = ""
@@ -30,27 +31,22 @@ def get_chunks(docs_folder, max_tokens=192, overlap_tokens=50):
             sentence_token_count = len(sentence_tokens)
 
             if current_chunk_tokens + sentence_token_count > max_tokens:
-                # If adding this sentence would exceed max_tokens, save the current chunk
                 if current_chunk:
                     chunk_text = tokenizer.convert_tokens_to_string(current_chunk)
                     file_chunks.append(chunk_text)
-                
-                # Start a new chunk, keeping the overlap
+
                 overlap_start = max(0, len(current_chunk) - overlap_tokens)
                 current_chunk = current_chunk[overlap_start:] + sentence_tokens
                 current_chunk_tokens = len(current_chunk)
             else:
-                # Add the sentence to the current chunk
                 current_chunk.extend(sentence_tokens)
                 current_chunk_tokens += sentence_token_count
 
-        # Add any remaining text as a final chunk
         if current_chunk:
             chunk_text = tokenizer.convert_tokens_to_string(current_chunk)
             file_chunks.append(chunk_text)
 
-        # Add all chunks from this file to the main list, including the filename at the end
-        all_chunks.extend([f"{chunk}'" for chunk in file_chunks])
+        all_chunks.extend([(chunk, filename) for chunk in file_chunks])
 
     return all_chunks
 

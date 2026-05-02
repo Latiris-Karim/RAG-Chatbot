@@ -1,5 +1,7 @@
 /for_me/
 .env
 /resources
-embeddings.csv
-chunks.csv
+/chroma_db
+.pytest_cache
+__pycache__
+
