@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from src.db import subscription_db
 from src.utils.jwt_handler import get_current_user
+from src.services.subscription_service import cancel_stripe_subscription
 from pydantic import BaseModel
 from src.db import user_db
 import json
@@ -14,7 +15,7 @@ stripe.api_version = '2022-08-01'
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 endpoint_secret = os.getenv('WEBHOOK')
 
-router = APIRouter(prefix='/subscribtion', tags=["subscribtion"])
+router = APIRouter(prefix='/subscription', tags=["subscription"])
 webhook_router = APIRouter(tags=["webhooks"])
 
 class CustomerCreateRequest(BaseModel):
@@ -73,14 +74,12 @@ async def create_subscription(subscription_data: SubscriptionRequest, u_id: int 
 @router.post('/cancel-subscription')
 async def cancel_subscription(subscription_data: CancelSubscriptionRequest, u_id: int = Depends(get_current_user)):
     try:
-        # Cancel the subscription by deleting it
-        res = subscription_db.cancel_stripe_subscription(subscription_data.subscriptionId)
-        return res
+        return cancel_stripe_subscription(subscription_data.subscriptionId)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
     
 
-@router.get('/subscriptions')#to list the user their current subscribtion and next billing
+@router.get('/subscriptions')#to list the user their current subscription and next billing
 async def list_user_subscriptions(u_id: int = Depends(get_current_user)):
     try:
         customer_id = user_db.get_customer_id(u_id)
