@@ -8,11 +8,11 @@ bcrypt
 PyJWT
 hf_xet
 sentence_transformers
-tensorflow
-tf-keras
 openai
 torch
 stripe
 pytest
-pypdf
 psycopg2
+chonkie
+markitdown
+chromadb

@@ -1,6 +1,0 @@
-/for_me/
-.env
-/resources
-/chroma_db
-.pytest_cache
-__pycache__

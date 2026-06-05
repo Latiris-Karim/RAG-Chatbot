@@ -1,1 +1,33 @@
 ragui/
+ragapi/for_me/
+ragapi/resources/
+
+# env
+.env
+.env.*
+
+# python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# vector db
+chroma_db/
+
+# virtual envs
+venv/
+.venv/
+env/
+
+# eggs / build artifacts
+*.egg-info/
+dist/
+build/
+
+# editor
+.vscode/
+
+# misc
+.DS_Store
+*.log
+.pytest_cache/
