@@ -3,14 +3,14 @@ import os
 import time
 from dotenv import load_dotenv
 import asyncio
-from src.utils.PDF_to_chunks import get_chunks
-from src.services.vector_db import VectorDB
+from src.utils.chunker import ContextualChunker, LLMInterface
+from src.services.vector_db import ContextualVectorStore
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 load_dotenv()
 
 openai_client = AsyncOpenAI(api_key=os.getenv('llm_api'), base_url="https://api.deepseek.com")
-vector_db = VectorDB()
+vector_db = ContextualVectorStore()
 
 
 class RAG:
@@ -19,7 +19,7 @@ class RAG:
         self.vector_db = vector_db
 
     async def get_context(self, user_input):
-        return await self.vector_db.query(user_input)
+        return await self.vector_db.retrieve(user_input)
 
     def format_query(self, chathistory, question, context):
         context_str = " ".join(context)
@@ -70,10 +70,11 @@ class RAG:
 
 
 async def main():
-    #Store chunks in vector DB
-    path = os.getenv('pdf_path')
-    chunks = get_chunks(path)
-    await asyncio.get_event_loop().run_in_executor(None, vector_db.ingest, chunks)
+    path = os.getenv('file_path')
+    llm = LLMInterface()
+    chunker = ContextualChunker(path, llm)
+    chunks = await asyncio.get_event_loop().run_in_executor(None, chunker.chunk)
+    await asyncio.get_event_loop().run_in_executor(None, vector_db.add_chunks, chunks)
 
 
 if __name__ == "__main__":
